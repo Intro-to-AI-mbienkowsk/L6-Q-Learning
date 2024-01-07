@@ -63,8 +63,8 @@ class Agent(ABC):
                reward: float,
                next_obs: Observation):
         best_next_q = np.max(self.q_values[next_obs])
-        delta = reward + self.disc
-        self.q_values[obs][action]
+        delta = reward + self.discount_factor * best_next_q - self.q_values[obs][action]
+        self.q_values[obs][action] += self.learning_rate * delta
 
 
 class FrozenLakeAgent(Agent):
