@@ -1,0 +1,6 @@
+LEARNING_RATE = .01
+N_EPISODES = 10000
+EPSILON = .9
+DISCOUNT_FACTOR = .9
+# TODO: epsilon decay
+
