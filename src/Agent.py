@@ -28,15 +28,16 @@ class FrozenLakeObservation:
 
 class Agent(ABC):
     def __init__(self, env: Env,
-                 learning_rate: float = LEARNING_RATE,
-                 n_episodes: int = N_EPISODES,
-                 discount_factor: float = DISCOUNT_FACTOR):
+                 learning_rate: float,
+                 n_episodes: int,
+                 discount_factor: float,
+                 epsilon_decay: float):
         self._env = env
         self._lr = learning_rate
         self._n_episodes = n_episodes
         self._epsilon = 1
         # todo: parametrize decay
-        self._epsilon_decay_rate = 1 / (self.n_episodes / 2)
+        self._epsilon_decay_rate = 1 / (self.n_episodes * epsilon_decay)
         self._q_values = defaultdict(lambda: np.zeros(env.action_space.n))
         self._discount_factor = discount_factor
 
@@ -114,9 +115,17 @@ class Agent(ABC):
 
 
 class FrozenLakeAgent(Agent):
-    def __init__(self, env: Env, reward_system: RewardSystem = BASE_REWARD_SYSTEM):
-        super().__init__(env)
+    def __init__(self, env: Env,
+                 reward_system: RewardSystem = BASE_REWARD_SYSTEM,
+                 learning_rate: float = LEARNING_RATE,
+                 n_episodes: int = N_EPISODES,
+                 discount_factor: float = DISCOUNT_FACTOR,
+                 epsilon_decay: float = .5
+                 ):
+        super().__init__(env, learning_rate=learning_rate, n_episodes=n_episodes, discount_factor=discount_factor,
+                         epsilon_decay=epsilon_decay)
         self.reward_system = reward_system
+        self.training_log: list[float] = []
 
     def epoch(self):
         obs = FrozenLakeObservation(*self.env.reset())
@@ -124,14 +133,17 @@ class FrozenLakeAgent(Agent):
         while not terminal_state:
             action = self.get_action(obs.position)
             report = FrozenLakeStepReport(*self.env.step(action))
-            self.update(obs.position, action, report.reward, report.position)
+            reward = self.calculate_reward(report)
+            self.update(obs.position, action, reward, report.position)
             terminal_state = report.terminated or report.truncated
             obs = report
-        return obs
+        # return the report with the custom reward injected
+        return FrozenLakeStepReport(obs.position, self.calculate_reward(obs), obs.terminated, obs.truncated, obs.info)
 
     def calculate_reward(self, obs: FrozenLakeStepReport) -> float:
         """ Calculates the reward for a given move that conforms to self.reward_system
          based on the outcome of the move"""
+        return obs.reward
         if obs.truncated:
             return self.reward_system.on_fail
         if obs.terminated:
@@ -141,7 +153,6 @@ class FrozenLakeAgent(Agent):
     def train(self):
         passed = 0
         for e in range(self.n_episodes):
-            #   todo: calculate_reward(obs)
             obs = self.epoch()
             self.decay_epsilon()
             passed += obs.reward

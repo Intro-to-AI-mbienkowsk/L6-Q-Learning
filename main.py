@@ -31,8 +31,8 @@ def main():
     parser.add_argument('-rs', type=tuple[float, 3], default=(1, 0, 0),
                         help='Reward system to use when training (a, b, c) where a  is rewarded on succesfully passsing'
                              ' the episode, b is given for falling into the hole and c in any other case.')
-    parser.add_argument('-slip', type=bool, default=True, help='Determines whether the slippery (true) or'
-                                                               'non-slippery map is used.')
+    parser.add_argument('-slip', type=int, choices=[0, 1], default=1, help='Determines whether the slippery (1) or'
+                                                                           'non-slippery map is used.')
     args = parser.parse_args()
     run_model(args)
 
