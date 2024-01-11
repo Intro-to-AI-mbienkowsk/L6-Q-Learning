@@ -9,13 +9,18 @@ from src.constants import *
 def run_model(args: argparse.Namespace):
     map_name = f"{args.s}x{args.s}"
     train_env = gym.make("FrozenLake-v1", map_name=map_name, is_slippery=args.slip)
-    test_env = gym.make("FrozenLake-v1", map_name=map_name, is_slippery=args.slip, render_mode="human")
+    visible_env = gym.make("FrozenLake-v1", map_name=map_name, is_slippery=args.slip, render_mode="human")
     agent = FrozenLakeAgent(env=train_env, reward_system=RewardSystem(*args.rs), learning_rate=args.lr,
                             n_episodes=args.e, discount_factor=args.d)
     agent.train()
-    agent.env = test_env
-    # todo: change to agent.test()
-    agent.train()
+    print(f"During the test, the agent had a success rate of {agent.test(1000)}")
+
+    agent.plot_q_values()
+
+    agent.env = visible_env
+    print("The agent will now attempt to solve the problem 3 times with the environment visible"
+          " to you. To quit, press Ctrl+C")
+    agent.test(3)
 
 
 def main():
@@ -35,7 +40,6 @@ def main():
                                                                            'non-slippery map is used.')
     args = parser.parse_args()
     run_model(args)
-
     return 0
 
 

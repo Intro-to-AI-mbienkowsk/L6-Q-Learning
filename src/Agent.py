@@ -1,6 +1,9 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from enum import Enum
+
+from matplotlib import pyplot as plt
+
 from src.constants import *
 from abc import ABC, abstractmethod
 import numpy as np
@@ -36,7 +39,6 @@ class Agent(ABC):
         self._lr = learning_rate
         self._n_episodes = n_episodes
         self._epsilon = 1
-        # todo: parametrize decay
         self._epsilon_decay_rate = 1 / (self.n_episodes * epsilon_decay)
         self._q_values = defaultdict(lambda: np.zeros(env.action_space.n))
         self._discount_factor = discount_factor
@@ -102,7 +104,7 @@ class Agent(ABC):
         self.epsilon = max(self.epsilon - self.epsilon_decay_rate, MIN_EPSILON)
 
     @abstractmethod
-    def epoch(self):
+    def epoch(self, training: bool):
         ...
 
     @abstractmethod
@@ -111,6 +113,10 @@ class Agent(ABC):
 
     @abstractmethod
     def calculate_reward(self, obs: Observation):
+        ...
+
+    @abstractmethod
+    def plot_q_values(self):
         ...
 
 
@@ -125,16 +131,16 @@ class FrozenLakeAgent(Agent):
         super().__init__(env, learning_rate=learning_rate, n_episodes=n_episodes, discount_factor=discount_factor,
                          epsilon_decay=epsilon_decay)
         self.reward_system = reward_system
-        self.training_log: list[float] = []
 
-    def epoch(self):
+    def epoch(self, training: bool):
         obs = FrozenLakeObservation(*self.env.reset())
         terminal_state = False
         while not terminal_state:
             action = self.get_action(obs.position)
             report = FrozenLakeStepReport(*self.env.step(action))
             reward = self.calculate_reward(report)
-            self.update(obs.position, action, reward, report.position)
+            if training:
+                self.update(obs.position, action, reward, report.position)
             terminal_state = report.terminated or report.truncated
             obs = report
         # return the report with the custom reward injected
@@ -143,7 +149,6 @@ class FrozenLakeAgent(Agent):
     def calculate_reward(self, obs: FrozenLakeStepReport) -> float:
         """ Calculates the reward for a given move that conforms to self.reward_system
          based on the outcome of the move"""
-        return obs.reward
         if obs.truncated:
             return self.reward_system.on_fail
         if obs.terminated:
@@ -153,11 +158,46 @@ class FrozenLakeAgent(Agent):
     def train(self):
         passed = 0
         for e in range(self.n_episodes):
-            obs = self.epoch()
+            obs = self.epoch(training=True)
             self.decay_epsilon()
             passed += obs.reward
-            if obs.reward != 0:
-                print(f"Reward: {obs.reward}")
+
+    def test(self, n_test_epochs):
+        """Returns the fraction succesfull_epochs/n_test_epochs for a given test env"""
+        succesfull_epochs = 0
+        for i in range(n_test_epochs):
+            succesfull_epochs += self.epoch(training=False).reward == self.reward_system.on_success
+        return round(succesfull_epochs / n_test_epochs, 2)
+
+    def calculate_average_q_values(self):
+        """Returns dict idx: q_val where q_val is the average q_value attributed to moving to the field"""
+        result_dict = {}
+
+        for idx, q_array in self.q_values.items():
+            row, col = divmod(idx, 8)  # Convert index to row and column
+
+            left_idx = idx - 1 if col > 0 else None
+            down_idx = idx + 8 if row < 7 else None
+            right_idx = idx + 1 if col < 7 else None
+            up_idx = idx - 8 if row > 0 else None
+
+            neighbors_q_values = [
+                self.q_values.get(left_idx, np.zeros(4))[2],
+                self.q_values.get(down_idx, np.zeros(4))[3],
+                self.q_values.get(right_idx, np.zeros(4))[0],
+                self.q_values.get(up_idx, np.zeros(4))[1]
+            ]
+
+            avg_q_value = np.mean(neighbors_q_values)
+            result_dict[idx] = avg_q_value
+        return result_dict
+
+    def plot_q_values(self):
+        mean_dict = self.calculate_average_q_values()
+        mean_array = np.array([[mean_dict[8 * i + j] for i in range(8)] for j in range(8)])
+        plt.imshow(mean_array, cmap='viridis', vmin=np.min(mean_array), vmax=np.max(mean_array))
+        plt.colorbar()
+        plt.show()
 
 
 class Move(Enum):
