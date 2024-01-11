@@ -115,10 +115,6 @@ class Agent(ABC):
     def calculate_reward(self, obs: Observation):
         ...
 
-    @abstractmethod
-    def plot_q_values(self):
-        ...
-
 
 class FrozenLakeAgent(Agent):
     def __init__(self, env: Env,
@@ -168,36 +164,6 @@ class FrozenLakeAgent(Agent):
         for i in range(n_test_epochs):
             succesfull_epochs += self.epoch(training=False).reward == self.reward_system.on_success
         return round(succesfull_epochs / n_test_epochs, 2)
-
-    def calculate_average_q_values(self):
-        """Returns dict idx: q_val where q_val is the average q_value attributed to moving to the field"""
-        result_dict = {}
-
-        for idx, q_array in self.q_values.items():
-            row, col = divmod(idx, 8)  # Convert index to row and column
-
-            left_idx = idx - 1 if col > 0 else None
-            down_idx = idx + 8 if row < 7 else None
-            right_idx = idx + 1 if col < 7 else None
-            up_idx = idx - 8 if row > 0 else None
-
-            neighbors_q_values = [
-                self.q_values.get(left_idx, np.zeros(4))[2],
-                self.q_values.get(down_idx, np.zeros(4))[3],
-                self.q_values.get(right_idx, np.zeros(4))[0],
-                self.q_values.get(up_idx, np.zeros(4))[1]
-            ]
-
-            avg_q_value = np.mean(neighbors_q_values)
-            result_dict[idx] = avg_q_value
-        return result_dict
-
-    def plot_q_values(self):
-        mean_dict = self.calculate_average_q_values()
-        mean_array = np.array([[mean_dict[8 * i + j] for i in range(8)] for j in range(8)])
-        plt.imshow(mean_array, cmap='viridis', vmin=np.min(mean_array), vmax=np.max(mean_array))
-        plt.colorbar()
-        plt.show()
 
 
 class Move(Enum):

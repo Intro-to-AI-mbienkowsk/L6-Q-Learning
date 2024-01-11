@@ -15,7 +15,9 @@ przyjmuje następujące parametry:
 * `-d [float]` - współczynnik dyskonta
 * `-ed [float]` - po jakiej części epizodów agent ma zminimalizować epsilon, skupiając się na eksploatacji
 * `-s {4/8}` - rozmiar planszy
-* `-rs (a, b, c)` - system nagród, a za przejście do prezentu; b za wpadnięcie w dziurę; c w każdej innej sytuacji
+* `-on_win [float]` - nagroda za dotarcie do prezentu
+* `on_lose [float]` - nagroda za wpadnięcie w dziurę
+* `on_else [float]` - nagroda za każdy inny nieterminujący ruch
 * `-slip {0/1}` - włączony (1) lub wyłączony (0) poślizg
 
 Wszystkie argumenty mają domyślne wartości, więc możemy uruchomić skrypt poprzez
