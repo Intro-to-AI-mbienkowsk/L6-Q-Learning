@@ -16,8 +16,8 @@ przyjmuje następujące parametry:
 * `-ed [float]` - po jakiej części epizodów agent ma zminimalizować epsilon, skupiając się na eksploatacji
 * `-s {4/8}` - rozmiar planszy
 * `-on_win [float]` - nagroda za dotarcie do prezentu
-* `on_lose [float]` - nagroda za wpadnięcie w dziurę
-* `on_else [float]` - nagroda za każdy inny nieterminujący ruch
+* `-on_lose [float]` - nagroda za wpadnięcie w dziurę
+* `-on_else [float]` - nagroda za każdy inny nieterminujący ruch
 * `-slip {0/1}` - włączony (1) lub wyłączony (0) poślizg
 
 Wszystkie argumenty mają domyślne wartości, więc możemy uruchomić skrypt poprzez
