@@ -1,11 +1,13 @@
 from collections import defaultdict
 from enum import Enum
-
+from itertools import accumulate
 from src.constants import *
 from abc import ABC, abstractmethod
 import numpy as np
 from gymnasium import Env
 from typing import TypeVar
+
+from src.plotting import plot_agent_data, AgentInfo
 
 Observation = TypeVar('Observation')
 Action = TypeVar('Action')
@@ -124,6 +126,7 @@ class FrozenLakeAgent(Agent):
         super().__init__(env, learning_rate=learning_rate, n_episodes=n_episodes, discount_factor=discount_factor,
                          epsilon_decay=epsilon_decay)
         self.reward_system = reward_system
+        self.epoch_log = []
 
     def epoch(self, training: bool):
         obs = FrozenLakeObservation(*self.env.reset())
@@ -136,8 +139,9 @@ class FrozenLakeAgent(Agent):
                 self.update(obs.position, action, reward, report.position)
             terminal_state = report.terminated or report.truncated
             obs = report
+        self.epoch_log.append(reward := self.calculate_reward(obs))
         # return the report with the custom reward injected
-        return FrozenLakeStepReport(obs.position, self.calculate_reward(obs), obs.terminated, obs.truncated, obs.info)
+        return FrozenLakeStepReport(obs.position, reward, obs.terminated, obs.truncated, obs.info)
 
     def calculate_reward(self, obs: FrozenLakeStepReport) -> float:
         """ Calculates the reward for a given move that conforms to self.reward_system
@@ -161,6 +165,16 @@ class FrozenLakeAgent(Agent):
         for i in range(n_test_epochs):
             succesfull_epochs += self.epoch(training=False).reward == self.reward_system.on_success
         return round(succesfull_epochs / n_test_epochs, 2)
+
+    def plot_goal_function_in_time(self):
+        """Plots how the sum of the goal function changed over the training epochs"""
+        info = AgentInfo(self.reward_system, self.n_episodes, self.discount_factor)
+        plot_agent_data(info, self.epoch_log, "Reward function across the training epochs")
+
+    def plot_goal_function_sum(self):
+        """Plots how the sum of the goal function changed over the training epochs"""
+        info = AgentInfo(self.reward_system, self.n_episodes, self.discount_factor)
+        plot_agent_data(info, list(accumulate(self.epoch_log)), "Sum of the reward function across the training epochs")
 
 
 class Move(Enum):

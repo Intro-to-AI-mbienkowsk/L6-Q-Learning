@@ -19,6 +19,7 @@ def run_model(args: argparse.Namespace):
     print("The agent will now attempt to solve the problem 3 times with the environment visible"
           " to you. To quit, press Ctrl+C")
     agent.test(3)
+    agent.plot_goal_function_sum()
 
 
 def main():
