@@ -19,6 +19,9 @@ przyjmuje następujące parametry:
 * `-on_lose [float]` - nagroda za wpadnięcie w dziurę
 * `-on_else [float]` - nagroda za każdy inny nieterminujący ruch
 * `-slip {0/1}` - włączony (1) lub wyłączony (0) poślizg
+* `-visualize` - wyświetla wizualizację tablicy q-values po zakończeniu treningu
+* `-display` - wyświetla środowisko i uruchamia 3 epizody, aby obejrzeć działanie modelu
+* `-goal_sum` - wyświetla wykres zmiany sumy funkcji celu w czasie
 
 Wszystkie argumenty mają domyślne wartości, więc możemy uruchomić skrypt poprzez
 ```shell

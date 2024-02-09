@@ -14,7 +14,8 @@ class AgentInfo:
 
     def __str__(self):
         description = "Agent's parameters:\n"
-        description += f'Reward system (W/L): ({self.reward_system.on_success}/{self.reward_system.on_fail})\n'
+        description += (f'Reward system (W/L): ({self.reward_system.on_success}/'
+                        f'{0 if self.reward_system.on_fail == 0.0 else self.reward_system.on_fail})\n')
         description += f'Number of episodes: {self.n_episodes}\n'
         description += f'Discount factor: {self.discount_factor}'
         return description
