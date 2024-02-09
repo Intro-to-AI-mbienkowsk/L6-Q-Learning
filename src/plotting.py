@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from numbers import Number
+import numpy as np
 
 from src.constants import RewardSystem
 
@@ -26,4 +27,12 @@ def plot_agent_data(info: AgentInfo, plot_data: list[Number], title: str):
     plt.plot([i for i in range(len(plot_data))], plot_data)
     plt.text(1.1, 0.5, str(info), transform=plt.gca().transAxes, va='center', fontsize=12)
     plt.title(title)
+    plt.show()
+
+
+def visualize_q_values(avg_q_vals: dict):
+    mean_array = np.array([[avg_q_vals[8 * i + j] for j in range(8)] for i in range(8)])
+    plt.imshow(mean_array, cmap='viridis', vmin=np.min(mean_array), vmax=np.max(mean_array))
+    plt.title("Visualization of the agent's q-values")
+    plt.colorbar()
     plt.show()

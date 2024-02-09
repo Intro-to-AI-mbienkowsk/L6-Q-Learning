@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from gymnasium import Env
 from typing import TypeVar
+import random
 
 from src.plotting import plot_agent_data, AgentInfo
 
@@ -88,7 +89,8 @@ class Agent(ABC):
     def get_action(self, obs: Observation):
         if np.random.random() < self.epsilon:
             return self.get_random_action()
-        return int(np.argmax(self.q_values[obs]))
+        return random.choice([action for action in range(0, self.env.action_space.n)
+                              if self.q_values[obs][action] == np.max(self.q_values[obs])])
 
     def update(self,
                pos: int,
@@ -175,6 +177,10 @@ class FrozenLakeAgent(Agent):
         """Plots how the sum of the goal function changed over the training epochs"""
         info = AgentInfo(self.reward_system, self.n_episodes, self.discount_factor)
         plot_agent_data(info, list(accumulate(self.epoch_log)), "Sum of the reward function across the training epochs")
+
+    def calculate_average_q_values(self):
+        """Returns dict idx: q_val where q_val is the average q-value for a move from a field with the idx"""
+        return {field_idx: np.average(self.q_values[field_idx]) for field_idx in range(64)}
 
 
 class Move(Enum):

@@ -4,6 +4,7 @@ import gymnasium as gym
 from src.Agent import FrozenLakeAgent
 from argparse import ArgumentParser
 from src.constants import *
+from src.plotting import visualize_q_values
 
 
 def run_model(args: argparse.Namespace):
@@ -16,10 +17,14 @@ def run_model(args: argparse.Namespace):
     print(f"During the test, the agent had a success rate of {agent.test(1000)}")
 
     agent.env = visible_env
-    print("The agent will now attempt to solve the problem 3 times with the environment visible"
-          " to you. To quit, press Ctrl+C")
-    agent.test(3)
-    agent.plot_goal_function_sum()
+    if args.display:
+        print("The agent will now attempt to solve the problem 3 times with the environment visible"
+              " to you. To quit, press Ctrl+C")
+        agent.test(3)
+    if args.visualize:
+        visualize_q_values(agent.calculate_average_q_values())
+    if args.goal_sum:
+        agent.plot_goal_function_sum()
 
 
 def main():
@@ -40,6 +45,13 @@ def main():
                         help='Reward given to the agent after any non-episode terminating move')
     parser.add_argument('-slip', type=int, choices=[0, 1], default=1, help='Determines whether the slippery (1) or'
                                                                            'non-slippery map is used.')
+    parser.add_argument('-visualize', nargs='?', const=True, default=True,
+                        help='Visualize the q-table with a heatmap after training')
+    parser.add_argument('-display', nargs='?', const=True, default=False,
+                        help='Displays the environment and shows the agent complete 3 episodes.')
+    parser.add_argument('-goal_sum', nargs='?', const=True, default=False,
+                        help='Show the plot portraying how the sum of the ' +
+                             'agent\'s goal function has changed over the time.')
     args = parser.parse_args()
     run_model(args)
     return 0
