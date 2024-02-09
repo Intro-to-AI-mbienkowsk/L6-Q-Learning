@@ -91,13 +91,13 @@ class Agent(ABC):
         return int(np.argmax(self.q_values[obs]))
 
     def update(self,
-               obs: Observation,
+               pos: int,
                action: Action,
                reward: float,
-               next_obs: Observation):
-        best_next_q = np.max(self.q_values[next_obs])
-        delta = reward + self.discount_factor * best_next_q - self.q_values[obs][action]
-        self.q_values[obs][action] += self.learning_rate * delta
+               next_pos: int):
+        best_next_q = np.max(self.q_values[next_pos])
+        delta = reward + self.discount_factor * best_next_q - self.q_values[pos][action]
+        self.q_values[pos][action] += self.learning_rate * delta
 
     def decay_epsilon(self):
         self.epsilon = max(self.epsilon - self.epsilon_decay_rate, MIN_EPSILON)
